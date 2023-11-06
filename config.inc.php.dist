@@ -5,9 +5,13 @@
 
 // Fetch method (recommended value: system)
 // system - fetch geolocation information using local system GeoIP tools
+// geoip2 - fetch geolocation information using the MaxMind geoip2/geoip2 library
 // geoplugin - fetch geolocation information from http://www.geoplugin.net
 // geoiptool - fetch geolocation information from https://www.geoiptool.com
 $config['geolocation_fetch_method'] = 'system';
+
+// Location of the MaxMind GeoIP2 city database
+$config['geolocation_db'] = '/usr/share/GeoIP/GeoLite2-City.mmdb';
 
 // Define your organization internal networks.
 // IPs from these networks will not be asked about geolocation info.

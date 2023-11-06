@@ -4,7 +4,7 @@
  *
  * Roundcube plugin to provide geolocation utilities.
  *
- * @version 0.1.2
+ * @version 0.1.3
  * @author Diana Soares
  * @requires php-geoip
  *
@@ -78,12 +78,12 @@ class geolocation extends rcube_plugin
      */
     public static function get_geolocation_info($ip, $source='system')
     {
-        $context = stream_context_create(array('http' => array('timeout' => 20)));
         $geo = false;
 
         switch ($source) {
         case 'geoplugin':
             // using www.geoplugin.net
+            $context = stream_context_create(array('http' => array('timeout' => 20)));
             $d = unserialize(file_get_contents("http://www.geoplugin.net/php.gp?ip=".$ip, false, $context));
             if ($d['geoplugin_status'] == 200) {
                 $geo = array('city'    => $d['geoplugin_city'],
@@ -95,6 +95,7 @@ class geolocation extends rcube_plugin
 
         case 'geoiptool':
             // using geoiptool.com
+            $context = stream_context_create(array('http' => array('timeout' => 20)));
             $d = file_get_contents("https://www.geoiptool.com/en/?IP=".$ip, false, $context);
 
             if (preg_match_all("|<div class=\"data-item\">.*</div>|Us", $d, $items)) {
@@ -110,6 +111,32 @@ class geolocation extends rcube_plugin
                              'region'  => $d['Region'],
                              'country' => $d['Country']
                 );
+            }
+            break;
+
+        case 'geoip2':
+            $rcmail = rcube::get_instance();
+            $reader = new GeoIp2\Database\Reader($rcmail->config->get('geolocation_db', '/usr/share/GeoIP/GeoLite2-City.mmdb'));
+            try {
+                $record = $reader->city($ip);
+            } catch (GeoIp2\Exception\AddressNotFoundException) {
+                break;
+            }
+            $lang_full  = $rcmail->get_user_language() ?: 'en';
+            $lang_short = substr($lang_full, 0, 2);
+            $geo = [
+                'city'    => $record->city->names[$lang_full ] ??
+                             $record->city->names[$lang_short] ??
+                             $record->city->names['en'       ] ?? 'unknown',
+                'region'  => $record->subdivisions[0]->names[$lang_full ] ??
+                             $record->subdivisions[0]->names[$lang_short] ??
+                             $record->subdivisions[0]->names['en'       ] ?? 'unknown',
+                'country' => $record->country->names[$lang_full ] ??
+                             $record->country->names[$lang_short] ??
+                             $record->country->names['en'       ] ?? 'unknown'
+            ];
+            if (array_values($geo) == ['unknown', 'unknown', 'unknown']) {
+                $geo = false;
             }
             break;
 

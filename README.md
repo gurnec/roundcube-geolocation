@@ -42,7 +42,9 @@ Place this directory under your Rouncdube `plugins/` folder, copy `config.inc.ph
 
 ## Configuration
 
-- **$config['geolocation_fetch_method']** - can be one of `system` (default), `geoplugin`, `geoiptool`.
+- **$config['geolocation_fetch_method']** - can be one of `system` (default), `geoip2`, `geoplugin`, `geoiptool`.
+
+- **$config['geolocation_db']** - when using the `geoip2` method, location of the MaxMind GeoIP2 city database.
 
 - **$config['geolocation_internal_networks']** - `array` defining the organization internal networks with descriptions.
 
